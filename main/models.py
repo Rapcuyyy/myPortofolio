@@ -24,3 +24,13 @@ class Experience(models.Model):
     @property
     def is_ongoing(self):
         return self.ended_at is None
+
+class Education(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    place = models.CharField(max_length=225)
+    major = models.CharField()
+    year_grad = models.IntegerField()
+    description = models.TextField()
+    logo = models.ImageField(upload_to="static/img/")
+    def __str__(self):
+        return self.place + " " + self.major
