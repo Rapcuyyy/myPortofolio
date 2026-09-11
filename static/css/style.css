@@ -216,48 +216,6 @@ h1, .brand {
     text-align: center;
 }
 
-/* Experience Card Layout (CSS Grid) */
-.experience-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
-}
-
-.card {
-    background-color: #fff;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 2rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
-    border-color: var(--accent);
-}
-
-.card h3 {
-    font-size: 1.25rem;
-    margin-bottom: 0.5rem;
-    color: var(--ink);
-}
-
-.role-date {
-    font-size: 0.85rem;
-    color: var(--accent-dark);
-    font-weight: 600;
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.card p:not(.role-date) {
-    font-size: 0.95rem;
-    color: var(--text-muted);
-}
-
 /* Education List Layout (Flexbox) */
 .education-list {
     display: flex;
@@ -363,6 +321,8 @@ h1, .brand {
     background-color: #fff;
     border: 1px solid var(--line);
     border-radius: var(--radius);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .experience-card-ongoing {
@@ -405,4 +365,10 @@ h1, .brand {
     margin-top: 1rem;
     font-size: 0.85rem;
     font-weight: 600;
+}
+
+.experience-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
+    border-color: var(--accent);
 }
