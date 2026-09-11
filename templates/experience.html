@@ -38,10 +38,14 @@
                             {{ experience.description }}
                         </p>
 
+                        {% if experience.thumbnail %}
+                            <a href="{{ experience.thumbnail }}" class="sertif" target="_blank">Certificate</a>
+                        {% endif %}
+
                         {% if experience.is_ongoing %}
                             <p class="experience-status">Sedang berlangsung</p>
                         {% else %}
-                            <p class="experience-status">Selesai &middot; {{ experience.ended_at|date:"Y"}}</p>
+                            <p class="experience-status">Selesai &middot; {{ experience.ended_at|date:"Y" }}</p>
                         {% endif %}
                     </article>
                 {% empty %}

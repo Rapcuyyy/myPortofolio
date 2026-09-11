@@ -392,6 +392,15 @@ h1, .brand {
     color: var(--text-muted);
 }
 
+.sertif {
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: 1rem;
+}
+
 .experience-status {
     margin-top: 1rem;
     font-size: 0.85rem;
