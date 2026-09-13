@@ -18,3 +18,26 @@ Saat ini, saya belum menggunakan `<aside>` karena belum ada konten tambahan yang
 3. Sejauh ini, batasan utama yang dirasakan adalah penulisan daftar konten secara manual (hardcoded) di dalam HTML. Jika terdapat kebutuhan untuk menambah, mengedit, atau mengurutkan ulang entri pengalaman, file HTML harus diedit secara langsung. Pendekatan ini tidak *scalable* untuk jangka panjang. Oleh karena itu, rencana pengembangan selanjutnya meliputi:
     *   Merender konten menggunakan struktur data eksternal, sehingga modifikasi entri *Experience* tidak perlu menyentuh *markup* HTML secara langsung.
     *   Menambahkan filter atau kategori sederhana menggunakan JavaScript untuk memisahkan pengalaman berdasarkan jenis (organisasi, magang, proyek pribadi), mengingat saat ini semua kartu data masih ditampilkan sekaligus tanpa pengelompokan.
+
+### Tugas 2
+
+Pada tugas ini, AI digunakan untuk mendesain page education, dan juga membantu saya mempelajari field ImageField dari sebuah model.
+
+1. Alur yang terjadi ketika pengguna membuka halaman portofolio baru adalah sebagai berikut:
+    * User mengetikkan URL ke web, kemudian browser mengirimkan request HTTP ke server Django.
+    * Django membaca `urls.py` pertama kali pada level proyek. File tersebut berfungsi untuk mengarahkan request ke `urls.py` milik aplikasi yang tepat menggunakan fungsi `include`.
+    * Nah di dalam aplikasi (`main/urls.py`), Django mencocokkan URL dengan rute yang tersedia. Jka cocok, akan memanggil fungsi *view* yang terhubung dengan rute tersebut.
+    * Ketika `view.py` menerima request, *view* akan meminta data kepada model jika halaman tersebut memerlukan data.
+    * Permintaan dari *view* diterjemahkan oleh `models.py` menjadi perintah SQL untuk mengambil data langsung dari database. Setelah ditemukan, model mengirimkannya kembali ke *view* dalam bentuk objek python.
+    * Pada *template*, data objek dari *view* disatukan ke dalam sebuah variabel konteks dan mengirimkannya ke *template* HTML. *Template* kemudian memasukkan data dinamis tersebut ke dalam struktur HTML menggunakan *template tags* (seperti `{{ }}` atau `{% %}`).
+    * Setelah *template* selesai di-*render* menjadi dokumen HTML utuh, *view* membungkusnya menjadi HTTP Response dan mengirimkannya kembali ke *browser* pengguna untuk ditampilkan.
+
+2. Ada 2 alasan utama mengapa data portofolio dimasukkan ke dalam model dan bukan *hardcod* di *template*, yaitu:
+    * Kemudahan pemeliharaan: ketika suatu saat mau mengubah data yang ada, maka kita hanya perlu mengubah *object* dari suatu model saja tanpa perlu mengambil risiko untuk merusak kode HTML secara tidak sengaja.
+    * Skalabilitas pengembangan: Saat data berada di dalam model, kita dapat dengan mudah menambahkan fitur baru tanpa merombak *template*, seperti menambahkan fitur *sort*, *filter*, dll.
+
+3. Perbedaan dari `makemigrations` dengan `migrate` adalah sebagai berikut:
+    * `makemigrations` berfungsi untuk memeriksa perubahan pada file `models.py` dan membuat sebuah file instruksi baru yang berisi langkah-langkah bagaimana database harus diubah. Nah perintah ini belum mengubah database sungguhan.
+    * `migrate` berfungsi untuk membaca file instruksi yang dibuat oleh makemigrations dan secara fisik menerapkannya ke dalam sistem database.
+    
+    Kedua peritah ini dijalankan ketika kita menambah atau menghapus atau mengubah sebuah model pada file `models.py`.
