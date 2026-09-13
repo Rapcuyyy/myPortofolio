@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from main.models import Experience
+from main.models import Experience, Education
 
 
 class MainTest(TestCase):
@@ -56,3 +56,35 @@ class MainTest(TestCase):
         self.assertFalse(self.experience.is_ongoing)
         self.assertContains(response, "Selesai")
         self.assertNotContains(response, "Sedang berlangsung")
+
+class EducationTest(TestCase):
+    def setUp(self):
+        self.education = Education.objects.create(
+            place="Universitas Indonesia",
+            major="CS",
+            category="bachelor",
+            year_start=2025,
+            description="ngampus di sini aja seru",
+        )
+
+    def test_education_with_correct_template(self):
+        response = self.client.get(reverse("main:show_education"))
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "education.html")
+
+    def test_education_page(self):
+        response = self.client.get(reverse("main:show_education"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.education.place)
+        self.assertContains(response, self.education.major)
+        self.assertContains(response, self.education.year_start)
+        self.assertContains(response, self.education.description)
+        self.assertContains(response, f'href="{reverse("main:show_main")}"')
+
+    def test_empty_experience_page(self):
+        Education.objects.all().delete()
+        response = self.client.get(reverse("main:show_education"))
+
+        self.assertContains(response, "Not added yet.")
