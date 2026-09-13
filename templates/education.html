@@ -29,27 +29,37 @@
 
                 <div class="education-list">
                     {% for education in education_list %}
-                        <article class="edu-item">
+                        <article class="edu-card">
                             {% if education.logo %}
-                                <figure class="edu-img-container">
-                                    <img src="{{ education.logo }}" alt="Logo {{ education.place }}">
+                                <figure class="edu-logo-wrapper">
+                                    <img src="{{ education.logo.url }}" alt="Logo {{ education.place }}" class="edu-logo">
                                 </figure>
                             {% endif %}
-                            <div class="edu-details">
-                                <h3><a href="{ education.thumbnail }" target="_blank" rel="noopener noreferrer">{ education.place }</a></h3>
-                                <p class="role-date">
-                                    {% if education.major %}
-                                        {{ education.major }} &middot;
-                                    {% endif %} 
-                                    {{ education.started_at }} &mdash; {{ education.ended_at }}
-                                </p>
-                                <p>{{ education.description }}</p>
+                            <div class="edu-content">
+                                <header class="edu-header">
+                                    <h3 class="edu-title">
+                                        <a href="{{ education.thumbnail }}" target="_blank" rel="noopenner noreferrer">{{ education.place }}</a>
+                                    </h3>
+
+                                    <span class="edu-timeline">
+                                        {{ education.year_start }} &mdash;
+                                        {% if education.year_grad %}
+                                            {{ education.year_grad }}
+                                        {% else %}
+                                            Present
+                                        {% endif %}
+                                    </span>
+                                </header>
+
+                                {% if education.major %}
+                                    <p class="edu-major">{{ education.major }}</p>
+                                {% endif %}
+
+                                <p class="edu-description">{{ education.description }}</p>
                             </div>
                         </article>
                     {% empty %}
-                        <p class="empty-state">
-                            Not added yet.
-                        </p>
+                        <p class="empty-state">Not added yet.</p>
                     {% endfor %}
                 </div>
             </div>

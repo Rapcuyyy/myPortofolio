@@ -38,7 +38,7 @@ class Education(models.Model):
     major = models.CharField()
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='other')
     year_start = models.IntegerField(default=2026)
-    year_grad = models.IntegerField()
+    year_grad = models.IntegerField(blank=True, null=True)
     description = models.TextField()
     logo = models.ImageField(upload_to="static/img/")
     thumbnail = models.URLField(blank=True, null=True)
