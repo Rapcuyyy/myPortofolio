@@ -26,11 +26,21 @@ class Experience(models.Model):
         return self.ended_at is None
 
 class Education(models.Model):
+    CATEGORY_CHOICES = [
+        ('elementary', 'Elementary'),
+        ('junior', 'Junior'),
+        ('senior', 'Senior'),
+        ('bachelor', 'Bachelor'),
+        ('other', 'Other'),
+    ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     place = models.CharField(max_length=225)
     major = models.CharField()
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='other')
+    year_start = models.IntegerField(default=2026)
     year_grad = models.IntegerField()
     description = models.TextField()
     logo = models.ImageField(upload_to="static/img/")
+    thumbnail = models.URLField(blank=True, null=True)
     def __str__(self):
         return self.place + " " + self.major
