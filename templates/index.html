@@ -1,42 +1,45 @@
-  {% extends 'base.html' %}
-  {% block content %}
-    <main>
-        <section class="hero" id="profile">
-            <div class="container hero-grid">
-                <div class="hero-identity">
-                    <p class="hero-kicker">Computer Science &middot; Universitas Indonesia</p>
-                    <h1>{{ name }}</h1>
-                </div>
-                <div class="hero-photo">
-                    <div class="photo-block"></div>
-                    <img class="avatar" src="/static/img/foto_profile.jpeg" alt="Photo of {{ name }}">
-                </div>
-                <div class="hero-details">
-                    <p class="bio">{{ bio }}</p>
-                    <dl class="meta-list">
-                        <div class="meta-row">
-                            <dt>NPM</dt>
-                            <dd>{{ npm }}</dd>
-                        </div>
-                        <div class="meta-row">
-                            <dt>Program</dt>
-                            <dd>{{ study_program }}</dd>
-                        </div>
-                    </dl>
-                    <ul class="skills">
-                        <li>Programming Fundamentals</li>
-                        <li>Java</li>
-                        <li>Python</li>
-                        <li>Data Structures</li>
-                        <li>Teaching & Mentoring</li>
-                    </ul>
-                    <div class="social-links">
-                        <a href="https://github.com/" class="social-link">GitHub</a>
-                        <a href="https://linkedin.com/" class="social-link">LinkedIn</a>
-                        <a href="mailto:burhan@example.com" class="social-link">Email</a>
+{% extends 'base.html' %}
+{% block meta %}
+    <title>Profile - {{ name }}</title>
+{% endblock meta %}
+{% block content %}
+<main>
+    <section class="hero" id="profile">
+        <div class="container hero-grid">
+            <div class="hero-identity">
+                <p class="hero-kicker">Computer Science &middot; Universitas Indonesia</p>
+                <h1>{{ name }}</h1>
+            </div>
+            <div class="hero-photo">
+                <div class="photo-block"></div>
+                <img class="avatar" src="/static/img/foto_profile.jpeg" alt="Photo of {{ name }}">
+            </div>
+            <div class="hero-details">
+                <p class="bio">{{ bio }}</p>
+                <dl class="meta-list">
+                    <div class="meta-row">
+                        <dt>NPM</dt>
+                        <dd>{{ npm }}</dd>
                     </div>
+                    <div class="meta-row">
+                        <dt>Program</dt>
+                        <dd>{{ study_program }}</dd>
+                    </div>
+                </dl>
+                <ul class="skills">
+                    <li>Programming Fundamentals</li>
+                    <li>Java</li>
+                    <li>Python</li>
+                    <li>Data Structures</li>
+                    <li>Teaching & Mentoring</li>
+                </ul>
+                <div class="social-links">
+                    <a href="https://github.com/" class="social-link">GitHub</a>
+                    <a href="https://linkedin.com/" class="social-link">LinkedIn</a>
+                    <a href="mailto:burhan@example.com" class="social-link">Email</a>
                 </div>
             </div>
-        </section>
-    </main>
-  {% endblock content %}
+        </div>
+    </section>
+</main>
+{% endblock content %}
