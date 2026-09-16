@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.core import serializers
 from django.http import HttpResponse
+from django.conf import settings
 from django.shortcuts import get_object_or_404, redirect, render
 
 from main.models import Experience, Education
@@ -31,10 +32,18 @@ def show_education(request):
 def create_experience(request):
     form = ExperienceForm(request.POST or None)
 
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "New experience has been added!")
-        return redirect("main:show_experience")
+    if request.method == "POST":
+        input_secret = request.POST.get("secret_code")
+        header_secret = request.headers.get("X-Secret-Code")
+
+        if settings.PORTFOLIO_SECRET not in [input_secret, header_secret]:
+            messages.error(request, "Akses ditolak: Kode rahasia salah!")
+            return redirect("main:show_experience")
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, "New experience has been added!")
+            return redirect("main:show_experience")
 
     context = {
         "name": "Rafa Darussalam",
@@ -73,8 +82,13 @@ def delete_experience(request, experience_id):
     experience = get_object_or_404(Experience, pk=experience_id)
 
     if request.method == "POST":
-        experience.delete()
-        messages.success(request, "Experience berhasil dihapus!")
-        return redirect("main:show_experience")
+        input_secret = request.POST.get("secret_code")
+        header_secret = request.headers.get("X-Secret-Code")
+
+        if settings.PORTFOLIO_SECRET in [input_secret, header_secret]:
+            experience.delete()
+            messages.success(request, "Experience berhasil dihapus!")
+        else:
+            messages.error(request, "Akses ditolak: Kode rahasia salah!")
 
     return redirect("main:show_experience")

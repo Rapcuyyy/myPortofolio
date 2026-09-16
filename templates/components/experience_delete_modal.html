@@ -34,8 +34,11 @@
                     class="button button-secondary"
                     popovertarget="delete-project-{{ experience.id }}"
                     popovertargetaction="hide">Batal</button>
-            <form method="post" action="{% url 'main:delete_experience' experience.id %}">
+            <form method="post" action="{% url 'main:delete_experience' experience.id %}" style="display: flex; flex-direction: column; gap: 10px;">
                 {% csrf_token %}
+                
+                <input type="password" name="secret_code" placeholder="Kode Rahasia" required class="project-search__input">
+                
                 <button type="submit" class="button button-danger">Ya, Hapus</button>
             </form>
         </div>
