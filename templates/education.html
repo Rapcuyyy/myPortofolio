@@ -7,7 +7,26 @@
         <section class="main-section" id="experience">
             <div class="container">
                 <p class="section-kicker">My educational background</p>
-                <h1>Education</h1>
+                <div class="project-header">
+                    <h1>Education</h1>
+                    <a href="{% url 'main:create_education' %}"
+                        class="button project-add-button">
+                        <span aria-hidden="true">+</span>
+                        Add Education Journey
+                    </a>
+                </div>
+
+                <form method="get"
+                        action="{% url 'main:show_education' %}"
+                        class="project-search">
+                    <input type="search"
+                            name="title"
+                            value="{{ title_query }}"
+                            placeholder="Cari berdasarkan tempat belajar"
+                            class="project-search__input"
+                            aria-label="Cari berdasarkan tempat belajar">
+                    <button type="submit" class="button">Cari</button>
+                </form>
 
                 <div class="education-list">
                     {% for education in education_list %}
@@ -39,9 +58,17 @@
 
                                 <p class="edu-description">{{ education.description }}</p>
                             </div>
+                            <div class="project-actions">
+                                <a href="{% url 'main:edit_education' education.id %}" class="button button-secondary">Edit</a>
+                                {% include "components/education_delete_modal.html" with education=education %}
+                            </div>
                         </article>
                     {% empty %}
-                        <p class="empty-state">Not added yet.</p>
+                        {% if title_query %}
+                                <p class="empty-state">Tidak ada proyek dengan nama tersebut.</p>
+                            {% else %}
+                                <p class="empty-state">Belum ada proyek yang ditambahkan.</p>
+                        {% endif %}
                     {% endfor %}
                 </div>
             </div>

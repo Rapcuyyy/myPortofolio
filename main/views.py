@@ -168,7 +168,6 @@ def show_education(request):
     )
 
     educations = [education.object for education in educations]
-    
     place_query = request.GET.get("place", "").strip()
 
     context = {

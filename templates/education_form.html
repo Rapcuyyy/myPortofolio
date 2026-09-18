@@ -1,33 +1,45 @@
 {% extends "base.html" %}
 {% block meta %}
-    <title>Add Education - {{ name }}</title>
+    <title>{% if education %}Edit{% else %}Add{% endif %} Education - {{ name }}</title>
 {% endblock meta %}
+
 {% block content %}
     <main>
-        <section class="experience-section">
+        <section class="main-section">
             <div class="container">
-                <h1>Add New Education Journey</h1>
-                <form method="post"
-                      action="{% url 'main:create_education' %}"
-                      class="experience-form"
-                      enctype="multipart/form-data">
+                <h1>{% if education %}Edit Education Journey{% else %}Add New Education{% endif %}</h1>
+                
+                <form method="post" enctype="multipart/form-data" class="experience-form" style="max-width: 600px; margin-top: 2rem;">
                     {% csrf_token %}
+                    
                     {% for field in form %}
-                        <div class="form-group">
-                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                {{ field.label }}
+                            </label>
+                            
                             {{ field }}
+                            
                             {% for error in field.errors %}
-                                <p class="form-error">{{ error }}</p>
+                                <p class="form-error" style="color: red; font-size: 0.85rem; margin-top: 0.25rem;">{{ error }}</p>
                             {% endfor %}
                         </div>
                     {% endfor %}
+                    
+                    <hr style="margin: 2rem 0; border: 0; border-top: 1px solid var(--line);">
                     <div class="form-group" style="margin-bottom: 1.5rem;">
-                        <label for="secret_code">Secret Code (Wajib)</label>
-                        <input type="password" id="secret_code" name="secret_code" required class="project-search__input" placeholder="Masukkan kode rahasia">
+                        <label for="secret_code" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--accent-dark);">
+                            Secret Code (Wajib)
+                        </label>
+                        <input type="password" id="secret_code" name="secret_code" required class="project-search__input" placeholder="Masukkan kode rahasia untuk autentikasi" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--line);">
                     </div>
 
-                    <button type="submit" class="button">Add Education</button>
-                    <a href="{% url 'main:show_experience' %}" class="button button-secondary">Cancel</a>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" class="button">
+                            {% if education %}Save Changes{% else %}Add Education{% endif %}
+                        </button>
+                        <a href="{% url 'main:show_education' %}" class="button button-secondary">Cancel</a>
+                    </div>
                 </form>
             </div>
         </section>
