@@ -58,7 +58,7 @@
 
                                 <p class="edu-description">{{ education.description }}</p>
                             </div>
-                            <div class="project-actions">
+                            <div class="edu-actions">
                                 <a href="{% url 'main:edit_education' education.id %}" class="button button-secondary">Edit</a>
                                 {% include "components/education_delete_modal.html" with education=education %}
                             </div>
