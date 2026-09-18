@@ -5,7 +5,7 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404, redirect, render
 
 from main.models import Experience, Education
-from main.forms import ExperienceForm
+from main.forms import ExperienceForm, EducationForm
 
 
 def show_main(request):
@@ -21,13 +21,6 @@ def show_main(request):
         ),
     }
     return render(request, "index.html", context)
-
-def show_education(request):
-    context = {
-        "name": "Rafa Darussalam",
-        "education_list": Education.objects.all(),
-    }
-    return render(request, "education.html", context)
 
 def create_experience(request):
     form = ExperienceForm(request.POST or None)
@@ -92,3 +85,96 @@ def delete_experience(request, experience_id):
             messages.error(request, "Akses ditolak: Kode rahasia salah!")
 
     return redirect("main:show_experience")
+
+def create_education(request):
+    form = EducationForm(request.POST or None, request.FILES or None)
+
+    if request.method == "POST":
+        input_secret = request.POST.get("secret_code")
+        header_secret = request.headers.get("X-Secret-Code")
+
+        if settings.PORTFOLIO_SECRET not in [input_secret, header_secret]:
+            messages.error(request, "Akses ditolak: Kode rahasia salah!")
+            return redirect("main:show_education")
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, "New education has been added!")
+            return redirect("main:show_education")
+
+    context = {
+        "name": "Rafa Darussalam",
+        "form": form,
+    }
+
+    return render(request, "education_form.html", context)
+
+def edit_education(request, education_id):
+    education = get_object_or_404(Education, pk=education_id)
+    form = EducationForm(request.POST or None, request.FILES or None, instance=education)
+
+    if request.method == "POST":
+        input_secret = request.POST.get("secret_code")
+        header_secret = request.headers.get("X-Secret-Code")
+
+        if settings.PORTFOLIO_SECRET not in [input_secret, header_secret]:
+            messages.error(request, "Akses ditolak: Kode rahasia salah!")
+            return redirect("main:show_education")
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Education data has been updated!")
+            return redirect("main:show_education")
+
+    context = {
+        "name": "Rafa Darussalam",
+        "form": form,
+        "education": education,
+    }
+
+    return render(request, "education_form.html", context)
+
+def delete_education(request, education_id):
+    education = get_object_or_404(Education, pk=education_id)
+
+    if request.method == "POST":
+        input_secret = request.POST.get("secret_code")
+        header_secret = request.headers.get("X-Secret-Code")
+
+        if settings.PORTFOLIO_SECRET in [input_secret, header_secret]:
+            education.delete()
+            messages.success(request, "Education berhasil dihapus!")
+        else:
+            messages.error(request, "Akses ditolak: Kode rahasia salah!")
+
+    return redirect("main:show_education")
+
+def get_education_json(request):
+    place_query = request.GET.get("place", "").strip()
+    educations = Education.objects.all()
+
+    if place_query:
+        educations = educations.filter(place__icontains=place_query)
+
+    educations_json = serializers.serialize("json", educations)
+    return HttpResponse(educations_json, content_type="application/json")
+
+def show_education(request):
+    json_response = get_education_json(request)
+
+    educations = serializers.deserialize(
+        "json",
+        json_response.content.decode("utf-8"),
+    )
+
+    educations = [education.object for education in educations]
+    
+    place_query = request.GET.get("place", "").strip()
+
+    context = {
+        "name": "Rafa Darussalam",
+        "education_list": educations,
+        "place_query": place_query,
+    }
+
+    return render(request, "education.html", context)

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block meta %}
+    <title>Add Education - {{ name }}</title>
+{% endblock meta %}
+{% block content %}
+    <main>
+        <section class="experience-section">
+            <div class="container">
+                <h1>Add New Education Journey</h1>
+                <form method="post"
+                      action="{% url 'main:create_education' %}"
+                      class="experience-form"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% for error in field.errors %}
+                                <p class="form-error">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label for="secret_code">Secret Code (Wajib)</label>
+                        <input type="password" id="secret_code" name="secret_code" required class="project-search__input" placeholder="Masukkan kode rahasia">
+                    </div>
+
+                    <button type="submit" class="button">Add Education</button>
+                    <a href="{% url 'main:show_experience' %}" class="button button-secondary">Cancel</a>
+                </form>
+            </div>
+        </section>
+    </main>
+{% endblock content %}
