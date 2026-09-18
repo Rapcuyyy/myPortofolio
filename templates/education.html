@@ -20,8 +20,8 @@
                         action="{% url 'main:show_education' %}"
                         class="project-search">
                     <input type="search"
-                            name="title"
-                            value="{{ title_query }}"
+                            name="place"
+                            value="{{ place_query }}"
                             placeholder="Cari berdasarkan tempat belajar"
                             class="project-search__input"
                             aria-label="Cari berdasarkan tempat belajar">
@@ -64,10 +64,10 @@
                             </div>
                         </article>
                     {% empty %}
-                        {% if title_query %}
-                                <p class="empty-state">Tidak ada proyek dengan nama tersebut.</p>
+                        {% if place_query %}
+                                <p class="empty-state">Ga pernah belajar di situ.</p>
                             {% else %}
-                                <p class="empty-state">Belum ada proyek yang ditambahkan.</p>
+                                <p class="empty-state">Belum ada pendidikan yang ditambahkan.</p>
                         {% endif %}
                     {% endfor %}
                 </div>
