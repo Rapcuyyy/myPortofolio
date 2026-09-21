@@ -41,3 +41,14 @@ Pada tugas ini, AI digunakan untuk mendesain page education, dan juga membantu s
     * `migrate` berfungsi untuk membaca file instruksi yang dibuat oleh makemigrations dan secara fisik menerapkannya ke dalam sistem database.
     
     Kedua peritah ini dijalankan ketika kita menambah atau menghapus atau mengubah sebuah model pada file `models.py`.
+
+### Tugas 3
+
+Pada tugas ini, AI digunakan untuk membantu saya lebih memahami alur tentang penghapusan dan pengeeditan dari sebuah objek model, serta cara menghubungkannya dari *templates* ke *app main*. Selebihnya saya meengikuti kode dari tutorial, *style*-nya pun hanya diubah beeberapa.
+
+1. Kita menggunakan `ModelForm` karena `ModelForm` dapat secara otomatis membuat form yang langsung terikat dengan struktur model di dalam *database*. Sehingga kita tidak perlu membuat manual setiap atribut di HTML. Sedangkan `{% csrf_token %}` ditambahkan untuk memastikan bahwa data yang dikirimkan benar-benar berasal dari website kita, bukan dari website lain yang mencoba untuk melakukan kerusakan lewat sesi autentikasi pengguna.
+
+2. Ada 2 alasan mengapa JSON lebih disukai dalam pengembangan aplikasi web modern. Pertama struktur JSON jauh lebih ringan, ringkas, dan mudah dibaca oleh mata manusia dibandingkan dengan XML yang menggunakan tag pembuka dan penutup yang mengganggu mata. Kedua, JSON merupakan *native language* dari JavaScript. Sedangkan hampir seluruh *frontend* web modern dibangun dengan JS, sehingga data JSON bisa langsung diproses menjadi objek yang bisa langsung dipakai.
+
+3. Berikut adalah alur yang terjadi saat saya menggunakan fungsi *view* untuk mengembalikan data portofolio dalam bentuk JSON. Saat web melakukan request ke URL API, Django memanggil fungsi *view* terkait. Fungsi *view* tersebut kemudian meminta data ke *database* melalui Model. Model mengembalikan data dalam bentuk objek Python. *View* kemudian meneruskan objek Python tersebut ke *serializer* untuk diubah menjadi string berformat JSON, lalu membungkusnya dalam `HttpResponse` untuk dikirim kembali ke web.
+Aplikasi *frontend* tidak mengerti bahasa Python ataupun struktur objek internal Django. Nah di sinilah serialisasi dibutuhkan untuk menerjemahkan objek Python yang kompleks menjadi format JSON agar bisa dibaca, dikirim lewat internet, serta diolah oleh berbagai macam bahasa pemrograman lain.
