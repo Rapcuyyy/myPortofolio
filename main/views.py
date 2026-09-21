@@ -9,8 +9,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from main.models import Experience, Education
 from main.forms import ExperienceForm, EducationForm
 
+import datetime
+
 
 def show_main(request):
+    last_login = request.COOKIES.get('last_login', 'Belum ada sesi login / Cookie tidak ditemukan.')
     context = {
         "username": "Rapcuyyy",
         "name": "Rafa Darussalam",
@@ -21,6 +24,7 @@ def show_main(request):
             " | Passionate about Software Engineering, Web Development, and Game Development"
             " | Actively exploring diverse experiences, from teaching assistantships and student organizations to committees and internship opportunities."
         ),
+        "last_login": last_login,
     }
     return render(request, "index.html", context)
 
@@ -198,8 +202,11 @@ def login_user(request):
     form = AuthenticationForm(request, data=request.POST or None)
 
     if request.method == "POST" and form.is_valid():
-        login(request, form.get_user())
-        return redirect("main:show_main")
+        user = form.get_user()
+        login(request, user)
+        response = redirect("main:show_main")
+        response.set_cookie('last_login', datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        return response
 
     context = {
         "name": "Rafa Darussalam",
@@ -209,4 +216,6 @@ def login_user(request):
 
 def logout_user(request):
     logout(request)
-    return redirect("main:show_main")
+    response = redirect("main:show_main")
+    response.delete_cookie('last_login')
+    return response
