@@ -9,11 +9,13 @@
                 <p class="section-kicker">My educational background</p>
                 <div class="project-header">
                     <h1>Education</h1>
-                    <a href="{% url 'main:create_education' %}"
-                        class="button project-add-button">
-                        <span aria-hidden="true">+</span>
-                        Add Education Journey
-                    </a>
+                    {% if user.is_superuser %}
+                        <a href="{% url 'main:create_education' %}"
+                            class="button project-add-button">
+                            <span aria-hidden="true">+</span>
+                            Add Education Journey
+                        </a>
+                    {% endif %}
                 </div>
 
                 <form method="get"
@@ -58,10 +60,12 @@
 
                                 <p class="edu-description">{{ education.description }}</p>
                             </div>
-                            <div class="edu-actions">
-                                <a href="{% url 'main:edit_education' education.id %}" class="button button-secondary">Edit</a>
-                                {% include "components/education_delete_modal.html" with education=education %}
-                            </div>
+                            {% if user.is_superuser %}
+                                <div class="edu-actions">
+                                    <a href="{% url 'main:edit_education' education.id %}" class="button button-secondary">Edit</a>
+                                    {% include "components/education_delete_modal.html" with education=education %}
+                                </div>
+                            {% endif %}
                         </article>
                     {% empty %}
                         {% if place_query %}
