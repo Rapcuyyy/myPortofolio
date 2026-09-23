@@ -4,7 +4,7 @@ from main.views import (
     show_main, show_experience, show_education, 
     create_experience, get_experience_json, delete_experience, 
     create_education, get_education_json, delete_education, edit_education,
-    register, login_user, logout_user, toggle_star
+    register, login_user, logout_user, toggle_star_experience
 )
 
 app_name = "main"
@@ -29,7 +29,7 @@ urlpatterns = [
 
     path(
         "experience/<uuid:experience_id>/star/",
-        toggle_star,
-        name="toggle_star"
+        toggle_star_experience,
+        name="toggle_star_experience"
     )
 ]

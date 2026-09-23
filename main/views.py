@@ -33,7 +33,7 @@ def show_main(request):
 @login_required(login_url="/login/")
 def create_experience(request):
     if not request.user.is_superuser:
-            raise PermissionDenied
+        raise PermissionDenied
     
     form = ExperienceForm(request.POST or None)
 
@@ -86,7 +86,7 @@ def show_experience(request):
 @login_required(login_url="/login/")
 def delete_experience(request, experience_id):
     if not request.user.is_superuser:
-            raise PermissionDenied
+        raise PermissionDenied
     
     experience = get_object_or_404(Experience, pk=experience_id)
 
@@ -105,7 +105,7 @@ def delete_experience(request, experience_id):
 @login_required(login_url="/login/")
 def create_education(request):
     if not request.user.is_superuser:
-            raise PermissionDenied
+        raise PermissionDenied
     
     form = EducationForm(request.POST or None, request.FILES or None)
 
@@ -132,7 +132,7 @@ def create_education(request):
 @login_required(login_url="/login/")
 def edit_education(request, education_id):
     if not request.user.is_superuser:
-            raise PermissionDenied
+        raise PermissionDenied
     
     education = get_object_or_404(Education, pk=education_id)
     form = EducationForm(request.POST or None, request.FILES or None, instance=education)
@@ -243,7 +243,7 @@ def logout_user(request):
     return response
 
 @login_required(login_url="/login/")
-def toggle_star(request, experience_id):
+def toggle_star_experience(request, experience_id):
     experience = get_object_or_404(Experience, pk=experience_id)
 
     if request.method == "POST":
@@ -253,4 +253,3 @@ def toggle_star(request, experience_id):
             experience.starred_by.add(request.user)
 
     return redirect("main:show_experience")
-
