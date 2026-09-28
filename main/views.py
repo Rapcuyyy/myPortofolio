@@ -13,6 +13,9 @@ from main.forms import ExperienceForm, EducationForm
 import datetime
 
 
+def is_editor(user):
+    return user.is_authenticated and user.groups.filter(name='Editor').exists()
+
 def show_main(request):
     last_login = request.COOKIES.get('last_login', 'Belum ada sesi login / Cookie tidak ditemukan.')
     context = {
@@ -72,6 +75,7 @@ def show_experience(request):
         "name": "Rafa Darussalam",
         "experience_list": experiences,
         "title_query": title_query,
+        "is_editor": is_editor(request.user),
     }
     return render(request, "experience.html", context)
 
@@ -168,6 +172,7 @@ def show_education(request):
         "name": "Rafa Darussalam",
         "education_list": educations,
         "place_query": place_query,
+        "is_editor": is_editor(request.user),
     }
 
     return render(request, "education.html", context)

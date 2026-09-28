@@ -60,10 +60,12 @@
 
                                 <p class="edu-description">{{ education.description }}</p>
                             </div>
-                            {% if user.is_superuser or user.is_editor %}
+                            {% if is_editor %}
                                 <div class="edu-actions">
                                     <a href="{% url 'main:edit_education' education.id %}" class="button button-secondary">Edit</a>
-                                    {% include "components/education_delete_modal.html" with education=education %}
+                                    {% if user.is_superuser %}
+                                        {% include "components/education_delete_modal.html" with education=education %}
+                                    {% endif %}
                                 </div>
                             {% endif %}
                         </article>
