@@ -5,7 +5,6 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
-from django.conf import settings
 from django.shortcuts import get_object_or_404, redirect, render
 
 from main.models import Experience, Education
@@ -38,13 +37,6 @@ def create_experience(request):
     form = ExperienceForm(request.POST or None)
 
     if request.method == "POST":
-        input_secret = request.POST.get("secret_code")
-        header_secret = request.headers.get("X-Secret-Code")
-
-        if settings.PORTFOLIO_SECRET not in [input_secret, header_secret]:
-            messages.error(request, "Akses ditolak: Kode rahasia salah!")
-            return redirect("main:show_experience")
-
         if form.is_valid():
             form.save()
             messages.success(request, "New experience has been added!")
@@ -91,14 +83,8 @@ def delete_experience(request, experience_id):
     experience = get_object_or_404(Experience, pk=experience_id)
 
     if request.method == "POST":
-        input_secret = request.POST.get("secret_code")
-        header_secret = request.headers.get("X-Secret-Code")
-
-        if settings.PORTFOLIO_SECRET in [input_secret, header_secret]:
-            experience.delete()
-            messages.success(request, "Experience berhasil dihapus!")
-        else:
-            messages.error(request, "Akses ditolak: Kode rahasia salah!")
+        experience.delete()
+        messages.success(request, "Experience berhasil dihapus!")
 
     return redirect("main:show_experience")
 
@@ -110,13 +96,6 @@ def create_education(request):
     form = EducationForm(request.POST or None, request.FILES or None)
 
     if request.method == "POST":
-        input_secret = request.POST.get("secret_code")
-        header_secret = request.headers.get("X-Secret-Code")
-
-        if settings.PORTFOLIO_SECRET not in [input_secret, header_secret]:
-            messages.error(request, "Akses ditolak: Kode rahasia salah!")
-            return redirect("main:show_education")
-
         if form.is_valid():
             form.save()
             messages.success(request, "New education has been added!")
@@ -138,13 +117,6 @@ def edit_education(request, education_id):
     form = EducationForm(request.POST or None, request.FILES or None, instance=education)
 
     if request.method == "POST":
-        input_secret = request.POST.get("secret_code")
-        header_secret = request.headers.get("X-Secret-Code")
-
-        if settings.PORTFOLIO_SECRET not in [input_secret, header_secret]:
-            messages.error(request, "Akses ditolak: Kode rahasia salah!")
-            return redirect("main:show_education")
-
         if form.is_valid():
             form.save()
             messages.success(request, "Education data has been updated!")
@@ -166,14 +138,8 @@ def delete_education(request, education_id):
     education = get_object_or_404(Education, pk=education_id)
 
     if request.method == "POST":
-        input_secret = request.POST.get("secret_code")
-        header_secret = request.headers.get("X-Secret-Code")
-
-        if settings.PORTFOLIO_SECRET in [input_secret, header_secret]:
-            education.delete()
-            messages.success(request, "Education berhasil dihapus!")
-        else:
-            messages.error(request, "Akses ditolak: Kode rahasia salah!")
+        education.delete()
+        messages.success(request, "Education berhasil dihapus!")
 
     return redirect("main:show_education")
 
