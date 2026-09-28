@@ -154,7 +154,7 @@ def get_education_json(request):
     if place_query:
         educations = educations.filter(place__icontains=place_query)
 
-    educations_json = serializers.serialize("json", educations)
+    educations_json = serializers.serialize("json", educations, use_natural_foreign_keys=True)
     return HttpResponse(educations_json, content_type="application/json")
 
 def show_education(request):
