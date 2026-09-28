@@ -131,7 +131,7 @@ def create_education(request):
 
 @login_required(login_url="/login/")
 def edit_education(request, education_id):
-    if not request.user.is_superuser:
+    if not request.user.is_superuser and not request.user.is_editor:
         raise PermissionDenied
     
     education = get_object_or_404(Education, pk=education_id)
