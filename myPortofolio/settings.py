@@ -147,6 +147,6 @@ WHITENOISE_USE_FINDERS = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # gunakan https:// untuk trailing urlnya
-CSRF_TRUSTED_ORIGINS = ["https://rafa-darussalam-myportofolio.pws.cs.ui.ac.id/"]
+CSRF_TRUSTED_ORIGINS = ["https://rafa-darussalam-myportofolio.pws.cs.ui.ac.id"]
 
 PORTFOLIO_SECRET = os.getenv('PORTFOLIO_SECRET', 'default-secret-jika-env-kosong')
