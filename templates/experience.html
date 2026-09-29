@@ -95,7 +95,7 @@
                     // Dummy UUID digunakan untuk digantikan oleh ID asli dari data JSON
                     const deleteUrl = "{% url 'main:delete_experience' '00000000-0000-0000-0000-000000000000' %}"
                         .replace('00000000-0000-0000-0000-000000000000', experienceId);
-                    const starUrl = "{% url 'main:toggle_star' '00000000-0000-0000-0000-000000000000' %}"
+                    const starUrl = "{% url 'main:toggle_star_experience' '00000000-0000-0000-0000-000000000000' %}"
                         .replace('00000000-0000-0000-0000-000000000000', experienceId);
 
                     const deleteHtml = IS_SUPERUSER 
