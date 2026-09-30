@@ -14,7 +14,7 @@
                             class="button project-add-button"
                             popovertarget="add-project-modal">
                         <span aria-hidden="true">+</span>
-                        Tambah Proyek
+                        Tambah Pengalaman
                     </button>
                 {% endif %}
             </div>
@@ -76,6 +76,16 @@ function displayPageSection({ showLoading = false, showError = false, showEmpty 
     gridContainer.classList.toggle('hide', !showGrid);
 }
 
+// Mengubah karakter khusus HTML menjadi entity agar ditampilkan sebagai teks
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
 // Membuat elemen card experience
 function buildExperienceCardElement(item) {
     const experience = item.fields;
@@ -98,7 +108,7 @@ function buildExperienceCardElement(item) {
 
     // Thumbnail
     const thumbnailHtml = experience.thumbnail
-        ? `<a href="${experience.thumbnail}" class="sertif" target="_blank">Certificate</a>`
+        ? `<a href="${escapeHtml(experience.thumbnail)}" class="sertif" target="_blank">Certificate</a>`
         : '';
 
     // Dummy UUID digunakan untuk digantikan oleh ID asli dari data JSON
@@ -117,14 +127,14 @@ function buildExperienceCardElement(item) {
     const isStarredClass = experience.is_starred ? " is-starred" : "";
     const starText = experience.is_starred ? "Unstar" : "Star";
     const starTitle = experience.star_count > 0 
-        ? `Dibintangi oleh ${experience.starred_by_names}` 
+        ? `Dibintangi oleh ${escapeHtml(experience.starred_by_names)}` 
         : "Jadilah yang pertama memberi star";
 
     // Komponen card
     const completeCardHtml = `
         <span class="experience-category">${categoryDisplay}</span>
-        <h2>${experience.title}</h2>
-        <p class="experience-description">${experience.description}</p>
+        <h2>${escapeHtml(experience.title)}</h2>
+        <p class="experience-description">${escapeHtml(experience.description)}</p>
 
         ${thumbnailHtml}
 
@@ -139,7 +149,7 @@ function buildExperienceCardElement(item) {
                             title="${starTitle}">
                         <span aria-hidden="true">★</span>
                         ${starText}
-                        <span class="star-count">${experience.star_count}</span>
+                        <span class="star-count">${escapeHtml(experience.star_count)}</span>
                     </button>
                 </form>
 
@@ -152,7 +162,7 @@ function buildExperienceCardElement(item) {
     return articleElement;
 }
 
-function closeProjectModal() {
+function closeExperienceModal() {
     document.getElementById("add-project-modal").hidePopover();
 }
 
@@ -209,6 +219,63 @@ searchForm.addEventListener("submit", function(event) {
     clearTimeout(searchDebounceTimer);
     searchExperiences();
 });
+
+const CREATE_EXPERIENCE_ENDPOINT = "{% url 'main:create_experience_ajax' %}";
+const experienceForm = document.getElementById('project-form');
+
+// Membaca nilai cookie, digunakan untuk mengambil token CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Mengirim data form ke server
+async function addExperience(event) {
+    event.preventDefault();
+
+    const submitButton = experienceForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+
+    try {
+        const response = await fetch(CREATE_EXPERIENCE_ENDPOINT, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: new FormData(experienceForm),
+        });
+        const result = await response.json().catch(() => ({}));
+
+        if (response.ok) {
+            experienceForm.reset();
+            closeExperienceModal();
+            showToast('Berhasil', 'Pengalaman baru berhasil ditambahkan!', 'success');
+            fetchExperiences(searchInput.value.trim());
+        } else {
+            const errorMessages = result.errors
+                ? Object.values(result.errors).flat().map(error => error.message)
+                : [result.message || `Terjadi kesalahan (status ${response.status}).`];
+            showToast('Gagal menambahkan pengalaman', errorMessages.join(' '), 'error');
+        }
+    } catch (error) {
+        console.error('Error adding experience:', error);
+        showToast('Gagal menambahkan pengalaman', 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
+    } finally {
+        submitButton.disabled = false;
+    }
+}
+
+if (experienceForm) {
+    experienceForm.addEventListener('submit', addExperience);
+}
 
 // Start application
 fetchExperiences(searchInput.value.trim());
