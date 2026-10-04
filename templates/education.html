@@ -18,67 +18,201 @@
                     {% endif %}
                 </div>
 
-                <form method="get"
-                        action="{% url 'main:show_education' %}"
-                        class="project-search">
+                <form id="project-search-form" class="project-search">
                     <input type="search"
-                            name="place"
-                            value="{{ place_query }}"
-                            placeholder="Cari berdasarkan tempat belajar"
-                            class="project-search__input"
-                            aria-label="Cari berdasarkan tempat belajar">
+                           id="search-input"
+                           name="title"
+                           value="{{ title_query }}"
+                           placeholder="Cari berdasarkan nama proyek"
+                           class="project-search__input"
+                           aria-label="Cari berdasarkan nama proyek">
                     <button type="submit" class="button">Cari</button>
                 </form>
 
-                <div class="education-list">
-                    {% for education in education_list %}
-                        <article class="edu-card">
-                            {% if education.logo %}
-                                <figure class="edu-logo-wrapper">
-                                    <img src="{{ education.logo.url }}" alt="Logo {{ education.place }}" class="edu-logo">
-                                </figure>
-                            {% endif %}
-                            <div class="edu-content">
-                                <header class="edu-header">
-                                    <h3 class="edu-title">
-                                        <a href="{{ education.thumbnail }}" target="_blank" rel="noopenner noreferrer">{{ education.place }}</a>
-                                    </h3>
-
-                                    <span class="edu-timeline">
-                                        {{ education.year_start }} &mdash;
-                                        {% if education.year_grad %}
-                                            {{ education.year_grad }}
-                                        {% else %}
-                                            Present
-                                        {% endif %}
-                                    </span>
-                                </header>
-
-                                {% if education.major %}
-                                    <p class="edu-major">{{ education.major }}</p>
-                                {% endif %}
-
-                                <p class="edu-description">{{ education.description }}</p>
-                            </div>
-                            <div class="edu-actions">
-                                {% include "components/education_star.html" with education=education %}
-                                {% if is_editor %}
-                                    <a href="{% url 'main:edit_education' education.id %}" class="button button-secondary">Edit</a>
-                                    {% if user.is_superuser %}
-                                        {% include "components/education_delete_modal.html" with education=education %}
-                                    {% endif %}
-                                {% endif %}
-                            </div>
-                        </article>
-                    {% empty %}
-                        {% if place_query %}
-                                <p class="empty-state">Ga pernah belajar di situ.</p>
-                            {% else %}
-                                <p class="empty-state">Belum ada pendidikan yang ditambahkan.</p>
-                        {% endif %}
-                    {% endfor %}
+                <!-- Loading State -->
+                <div id="loading" class="empty-state hide">
+                    <p>Memuat projects...</p>
                 </div>
+
+                <!-- Error State -->
+                <div id="error" class="empty-state hide">
+                    <p>Gagal memuat data projects. Silakan coba lagi.</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty" class="empty-state hide">
+                    <p>Belum ada proyek yang ditambahkan atau ditemukan.</p>
+                </div>
+
+                <!-- Project Grid -->
+                <div id="grid" class="experience-grid project-grid hide"></div>
+
             </div>
         </section>
     </main>
+
+<script>
+// Konfigurasi API
+const BASE_EDUCATION_ENDPOINT = "{% url 'main:get_education_json' %}";
+const IS_SUPERUSER = "{{ user.is_superuser|yesno:'true,false' }}" === "true";
+let educationAbortController;
+
+// Elemen DOM
+const loadingState = document.getElementById('loading');
+const errorState = document.getElementById('error');
+const emptyState = document.getElementById('empty');
+const gridContainer = document.getElementById('grid');
+const searchForm = document.getElementById('project-search-form');
+const searchInput = document.getElementById('search-input');
+const SEARCH_DEBOUNCE_DELAY = 300;
+let searchDebounceTimer;
+
+// Menyembunyikan/Menampilkan section halaman
+function displayPageSection({ showLoading = false, showError = false, showEmpty = false, showGrid = false }) {
+    loadingState.classList.toggle('hide', !showLoading);
+    errorState.classList.toggle('hide', !showError);
+    emptyState.classList.toggle('hide', !showEmpty);
+    gridContainer.classList.toggle('hide', !showGrid);
+}
+
+// Membuat elemen card education (Dikembalikan ke struktur class awal)
+function buildEducationCardElement(item) {
+    const education = item.fields;
+    const educationId = item.pk;
+
+    const articleElement = document.createElement('article');
+    articleElement.className = 'edu-card';
+
+    // Logo Institusi
+    const logoHtml = education.logo
+        ? `<figure class="edu-logo-wrapper">
+               <img src="${education.logo}" alt="Logo ${education.place}" class="edu-logo">
+           </figure>`
+        : '';
+
+    // Judul yang bisa di-klik jika ada thumbnail (sertifikat/bukti)
+    const titleHtml = education.thumbnail
+        ? `<a href="${education.thumbnail}" target="_blank" rel="noopenner noreferrer">${education.place}</a>`
+        : education.place;
+
+    // Timeline Lulus
+    const yearStart = education.year_start || '';
+    const yearGrad = education.year_grad || 'Present';
+
+    // URLs
+    const deleteUrl = "{% url 'main:delete_education' '00000000-0000-0000-0000-000000000000' %}"
+        .replace('00000000-0000-0000-0000-000000000000', educationId);
+    const editUrl = "{% url 'main:edit_education' '00000000-0000-0000-0000-000000000000' %}"
+        .replace('00000000-0000-0000-0000-000000000000', educationId);
+    const starUrl = "{% url 'main:toggle_star_education' '00000000-0000-0000-0000-000000000000' %}"
+        .replace('00000000-0000-0000-0000-000000000000', educationId);
+
+    // Tombol Admin (Edit & Hapus)
+    const adminActionsHtml = IS_SUPERUSER 
+        ? `
+            <a href="${editUrl}" class="button button-secondary">Edit</a>
+            <form method="post" action="${deleteUrl}" style="margin: 0;">
+                {% csrf_token %}
+                <button type="submit" class="button button-danger" style="width: 100%;" onclick="return confirm('Yakin ingin menghapus data edukasi ini?');">Hapus</button>
+            </form>
+          `
+        : '';
+
+    // Logika Star
+    const isStarredClass = education.is_starred ? " button-secondary" : "";
+    const starText = education.is_starred ? "★ Unstar" : "☆ Star";
+    const starTitle = education.star_count > 0 
+        ? `Dibintangi oleh ${education.starred_by_names}` 
+        : "Jadilah yang pertama memberi star";
+
+    // Merakit Card Lengkap (menggunakan struktur edu-content, edu-header, edu-actions)
+    const completeCardHtml = `
+        ${logoHtml}
+        
+        <div class="edu-content">
+            <header class="edu-header">
+                <h3 class="edu-title">${titleHtml}</h3>
+                <span class="edu-timeline">${yearStart} &mdash; ${yearGrad}</span>
+            </header>
+
+            ${education.major ? `<p class="edu-major">${education.major}</p>` : ''}
+            
+            <p class="edu-description">${education.description}</p>
+        </div>
+
+        <div class="edu-actions">
+            <form method="post" action="${starUrl}" class="star-form" style="margin: 0;">
+                {% csrf_token %}
+                <button type="submit" class="button${isStarredClass}" title="${starTitle}" style="width: 100%;">
+                    ${starText} <span class="star-count">(${education.star_count})</span>
+                </button>
+            </form>
+            
+            ${adminActionsHtml}
+        </div>
+    `;
+
+    articleElement.innerHTML = completeCardHtml;
+    return articleElement;
+}
+
+// Fetch data education
+async function fetchEducations(searchQuery = "") {
+    if (educationAbortController) educationAbortController.abort();
+    educationAbortController = new AbortController();
+
+    try {
+        displayPageSection({ showLoading: true });
+        
+        const url = searchQuery ? `${BASE_EDUCATION_ENDPOINT}?place=${encodeURIComponent(searchQuery)}` : BASE_EDUCATION_ENDPOINT;
+        
+        const response = await fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            signal: educationAbortController.signal,
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch data');
+
+        const educationData = await response.json();
+
+        if (educationData.length === 0) {
+            displayPageSection({ showEmpty: true });
+        } else {
+            gridContainer.innerHTML = '';
+            // Pastikan class grid disesuaikan menjadi list agar bentuk memanjang ke bawah seperti semula
+            gridContainer.className = 'education-list'; 
+            
+            educationData.forEach(item => {
+                gridContainer.appendChild(buildEducationCardElement(item));
+            });
+            displayPageSection({ showGrid: true });
+        }
+    } catch (error) {
+        if (error.name === 'AbortError') return;
+        console.error('Error loading educations:', error);
+        displayPageSection({ showError: true });
+    }
+}
+
+// Event Handlers untuk Form Search
+function searchEducation() {
+    fetchEducations(searchInput.value.trim());
+}
+
+searchInput.addEventListener("input", function() {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(function() {
+        searchEducation();
+    }, SEARCH_DEBOUNCE_DELAY);
+});
+
+searchForm.addEventListener("submit", function(event) {
+    event.preventDefault();
+    clearTimeout(searchDebounceTimer);
+    searchEducation();
+});
+
+// Panggil fetch awal saat halaman dimuat
+fetchEducations(searchInput.value.trim());
+</script>
 {% endblock content %}
