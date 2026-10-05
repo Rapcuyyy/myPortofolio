@@ -80,6 +80,16 @@ function displayPageSection({ showLoading = false, showError = false, showEmpty 
     gridContainer.classList.toggle('hide', !showGrid);
 }
 
+// Mengubah karakter khusus HTML menjadi entity agar ditampilkan sebagai teks
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
 // Membuat elemen card education (Dikembalikan ke struktur class awal)
 function buildEducationCardElement(item) {
     const education = item.fields;
@@ -91,18 +101,18 @@ function buildEducationCardElement(item) {
     // Logo Institusi
     const logoHtml = education.logo
         ? `<figure class="edu-logo-wrapper">
-               <img src="${education.logo}" alt="Logo ${education.place}" class="edu-logo">
+               <img src="${escapeHtml(education.logo)}" alt="Logo ${escapeHtml(education.place)}" class="edu-logo">
            </figure>`
         : '';
 
     // Judul yang bisa di-klik jika ada thumbnail (sertifikat/bukti)
     const titleHtml = education.thumbnail
-        ? `<a href="${education.thumbnail}" target="_blank" rel="noopenner noreferrer">${education.place}</a>`
-        : education.place;
+        ? `<a href="${escapeHtml(education.thumbnail)}" target="_blank" rel="noopenner noreferrer">${escapeHtml(education.place)}</a>`
+        : escapeHtml(education.place);
 
     // Timeline Lulus
-    const yearStart = education.year_start || '';
-    const yearGrad = education.year_grad || 'Present';
+    const yearStart = escapeHtml(education.year_start) || '';
+    const yearGrad = escapeHtml(education.year_grad) || 'Present';
 
     // URLs
     const deleteUrl = "{% url 'main:delete_education' '00000000-0000-0000-0000-000000000000' %}"
@@ -127,7 +137,7 @@ function buildEducationCardElement(item) {
     const isStarredClass = education.is_starred ? " button-secondary" : "";
     const starText = education.is_starred ? "★ Unstar" : "☆ Star";
     const starTitle = education.star_count > 0 
-        ? `Dibintangi oleh ${education.starred_by_names}` 
+        ? `Dibintangi oleh ${escapeHtml(education.starred_by_names)}` 
         : "Jadilah yang pertama memberi star";
 
     // Merakit Card Lengkap (menggunakan struktur edu-content, edu-header, edu-actions)
@@ -140,16 +150,16 @@ function buildEducationCardElement(item) {
                 <span class="edu-timeline">${yearStart} &mdash; ${yearGrad}</span>
             </header>
 
-            ${education.major ? `<p class="edu-major">${education.major}</p>` : ''}
+            ${escapeHtml(education.major) ? `<p class="edu-major">${escapeHtml(education.major)}</p>` : ''}
             
-            <p class="edu-description">${education.description}</p>
+            <p class="edu-description">${escapeHtml(education.description)}</p>
         </div>
 
         <div class="edu-actions">
             <form method="post" action="${starUrl}" class="star-form" style="margin: 0;">
                 {% csrf_token %}
                 <button type="submit" class="button${isStarredClass}" title="${starTitle}" style="width: 100%;">
-                    ${starText} <span class="star-count">(${education.star_count})</span>
+                    ${starText} <span class="star-count">(${escapeHtml(education.star_count)})</span>
                 </button>
             </form>
             
