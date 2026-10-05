@@ -52,3 +52,26 @@ Pada tugas ini, AI digunakan untuk membantu saya lebih memahami alur tentang pen
 
 3. Berikut adalah alur yang terjadi saat saya menggunakan fungsi *view* untuk mengembalikan data portofolio dalam bentuk JSON. Saat web melakukan request ke URL API, Django memanggil fungsi *view* terkait. Fungsi *view* tersebut kemudian meminta data ke *database* melalui Model. Model mengembalikan data dalam bentuk objek Python. *View* kemudian meneruskan objek Python tersebut ke *serializer* untuk diubah menjadi string berformat JSON, lalu membungkusnya dalam `HttpResponse` untuk dikirim kembali ke web.
 Aplikasi *frontend* tidak mengerti bahasa Python ataupun struktur objek internal Django. Nah di sinilah serialisasi dibutuhkan untuk menerjemahkan objek Python yang kompleks menjadi format JSON agar bisa dibaca, dikirim lewat internet, serta diolah oleh berbagai macam bahasa pemrograman lain.
+
+### Tugas 5
+
+Pada tugas ini, AI digunakan untuk membantu saya lebih memahami tentang penggunaan AJAX, serta membantu untuk penyusunan script supaya id dan class pada script masih sesuai dengan html yang lama. Kemudian karena salah satu field menggunakan gambar, saya juga bertanya kepada AI cara mengirim, menerima, dan menampilkan gambarnya pada script HTML.
+
+1. *Debouncing* adalah teknik untuk menunda sebuah fungsi hingga suatu jeda waktu berlalu tanpa event baru. Selama pengguna masih mengetik, timer sebelumnya dibatalkan dan dimulai lagi. Dengan demikian, browser hanya mengirim permintaan setelah pengguna berhenti mengetik selama sejenak. Jika tidak ada *debouncing*, fungsi `fetchProjects` akan dipasang langsung pada *event* `input` yang membuat browser banyak mengirim permintaan untuk setiap karakter.
+
+2. `await` adalah *keyword* yang hanya bisa digunakan di dalam *async function* dan berfungsi untuk “menunggu” `Promise` selesai diproses sebelum melanjutkan ke baris kode berikutnya. Tanpa `await`, sebuah `Promise` akan tetap berjalan di belakang layar dan kode berikutnya akan langsung dieksekusi tanpa menunggu hasilnya.
+
+Sebagai contoh, perhatikan potongan kode berikut:
+
+```javascript
+async function ambilData() {
+  const hasil = await fetch('https://contoh-api.com/data');
+  console.log(hasil);
+}
+```
+
+Pada kode di atas, keyword `async` yang diletakkan sebelum `function` menandai bahwa `ambilData` adalah *async function*. Selanjutnya, keyword `await` yang diletakkan sebelum `fetch()` membuat eksekusi kode menunggu hingga proses `fetch()` selesai sebelum baris `console.log(hasil)` dijalankan.
+
+3. *Cross-Site Scripting* (XSS) adalah serangan ketika penyerang berhasil menyisipkan kode JavaScript miliknya ke dalam halaman web yang kemudian dijalankan di browser pengguna lain. *Template* Django melakukan auto-escaping pada setiap `{ variabel }`. Karakter seperti `<` dan `>` diubah menjadi `&lt;` dan `&gt;` sehingga browser menampilkannya sebagai teks biasa, bukan sebagai tag HTML.
+
+Perlindungan itu hilang ketika kita pindah ke AJAX. Pada `buildProjectCardElement`, data dari JSON disisipkan ke dalam *template literal* lalu dipasang lewat `innerHTML`. Tidak ada lagi Django yang melakukan *escaping* sehingga browser akan memperlakukan setiap tag HTML di dalam data sebagai kode sungguhan.
