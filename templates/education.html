@@ -10,11 +10,12 @@
                 <div class="project-header">
                     <h1>Education</h1>
                     {% if user.is_superuser %}
-                        <a href="{% url 'main:create_education' %}"
-                            class="button project-add-button">
+                        <button type="button"
+                                class="button project-add-button"
+                                popovertarget="add-education-modal">
                             <span aria-hidden="true">+</span>
-                            Add Education Journey
-                        </a>
+                            Tambah Pendidikan
+                        </button>
                     {% endif %}
                 </div>
 
@@ -31,12 +32,12 @@
 
                 <!-- Loading State -->
                 <div id="loading" class="empty-state hide">
-                    <p>Memuat projects...</p>
+                    <p>Memuat pendidikan...</p>
                 </div>
 
                 <!-- Error State -->
                 <div id="error" class="empty-state hide">
-                    <p>Gagal memuat data projects. Silakan coba lagi.</p>
+                    <p>Gagal memuat data pendidikan. Silakan coba lagi.</p>
                 </div>
 
                 <!-- Empty State -->
@@ -50,6 +51,10 @@
             </div>
         </section>
     </main>
+
+{% if user.is_superuser %}
+    {% include "components/education_form_modal.html" %}
+{% endif %}
 
 <script>
 // Konfigurasi API
@@ -211,6 +216,67 @@ searchForm.addEventListener("submit", function(event) {
     clearTimeout(searchDebounceTimer);
     searchEducation();
 });
+
+function closeEducationModal() {
+    document.getElementById("add-education-modal").hidePopover();
+}
+
+const CREATE_EDUCATION_ENDPOINT = "{% url 'main:create_education_ajax' %}";
+const educationForm = document.getElementById('project-form');
+
+// Membaca nilai cookie, digunakan untuk mengambil token CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Mengirim data form ke server
+async function addEducation(event) {
+    event.preventDefault();
+
+    const submitButton = educationForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+
+    try {
+        const response = await fetch(CREATE_EDUCATION_ENDPOINT, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: new FormData(educationForm),
+        });
+        const result = await response.json().catch(() => ({}));
+
+        if (response.ok) {
+            educationForm.reset();
+            closeEducationModal();
+            showToast('Berhasil', 'Proyek baru berhasil ditambahkan!', 'success');
+            fetchEducations(searchInput.value.trim());
+        } else {
+            const errorMessages = result.errors
+                ? Object.values(result.errors).flat().map(error => error.message)
+                : [result.message || `Terjadi kesalahan (status ${response.status}).`];
+            showToast('Gagal menambahkan pendidikan', errorMessages.join(' '), 'error');
+        }
+    } catch (error) {
+        console.error('Error adding education:', error);
+        showToast('Gagal menambahkan pendidikan', 'Tidak dapat terhubung ke server. Silakan coba lagi.', 'error');
+    } finally {
+        submitButton.disabled = false;
+    }
+}
+
+if (educationForm) {
+    educationForm.addEventListener('submit', addEducation);
+}
 
 // Panggil fetch awal saat halaman dimuat
 fetchEducations(searchInput.value.trim());

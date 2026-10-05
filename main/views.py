@@ -201,6 +201,7 @@ def show_education(request):
         "name": "Rafa Darussalam",
         "place_query": place_query,
         "is_editor": is_editor(request.user),
+        "form": EducationForm(),
     }
 
     return render(request, "education.html", context)
@@ -291,7 +292,7 @@ def create_education_ajax(request):
             status=403,
         )
 
-    form = EducationForm(request.POST)
+    form = EducationForm(request.POST, request.FILES)
     if form.is_valid():
         education = form.save()
         return JsonResponse(
