@@ -128,11 +128,12 @@ def create_education(request):
 
 @login_required(login_url="/login/")
 def edit_education(request, education_id):
-    if not request.user.is_superuser and not request.user.is_editor:
+    if not request.user.is_superuser and not is_editor(request.user):
         raise PermissionDenied
     
     education = get_object_or_404(Education, pk=education_id)
     form = EducationForm(request.POST or None, request.FILES or None, instance=education)
+    form.fields["logo"].required = False
 
     if request.method == "POST":
         if form.is_valid():

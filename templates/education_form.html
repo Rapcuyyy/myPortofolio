@@ -9,7 +9,7 @@
             <div class="container">
                 <h1>{% if education %}Edit Education Journey{% else %}Add New Education{% endif %}</h1>
                 
-                <form method="post" enctype="multipart/form-data" class="experience-form" style="max-width: 600px; margin-top: 2rem;">
+                <form id="education-form" method="post" enctype="multipart/form-data" class="experience-form" style="max-width: 600px; margin-top: 2rem;">
                     {% csrf_token %}
                     
                     {% for field in form %}
@@ -38,4 +38,60 @@
             </div>
         </section>
     </main>
+    {% if education %}
+        <script>
+        const EDUCATION_UPDATE_ENDPOINT = "{% url 'api:education-detail' education.id %}";
+        const educationUpdateForm = document.getElementById('education-form');
+        const logoInput = educationUpdateForm.elements.namedItem('logo');
+
+        if (logoInput) logoInput.required = false;
+
+        function getCsrfToken() {
+            const cookie = document.cookie.split(';')
+                .map(value => value.trim())
+                .find(value => value.startsWith('csrftoken='));
+            const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+            return cookie
+                ? decodeURIComponent(cookie.slice('csrftoken='.length))
+                : csrfInput?.value;
+        }
+
+        function updateErrorMessage(data, status) {
+            const messages = Object.values(data || {}).flatMap(value =>
+                Array.isArray(value) ? value : [value]
+            ).filter(value => typeof value === 'string');
+            return messages.join(' ') || `Request failed (HTTP ${status}).`;
+        }
+
+        educationUpdateForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const submitButton = educationUpdateForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+
+            try {
+                const csrfToken = getCsrfToken();
+                if (!csrfToken) throw new Error('CSRF token is unavailable. Reload the page and try again.');
+                const formData = new FormData(educationUpdateForm);
+                if (logoInput && !logoInput.files.length) formData.delete('logo');
+                const response = await fetch(EDUCATION_UPDATE_ENDPOINT, {
+                    method: 'PATCH',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: formData,
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(updateErrorMessage(result, response.status));
+                }
+                showToast('Success', 'Education updated.', 'success');
+            } catch (error) {
+                showToast('Could not update education', error.message, 'error');
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+        </script>
+    {% endif %}
 {% endblock content %}

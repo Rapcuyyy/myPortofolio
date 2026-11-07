@@ -62,6 +62,7 @@ const BASE_EDUCATION_ENDPOINT = "{% url 'api:education-list' %}";
 const EDUCATION_DETAIL_ENDPOINT = "{% url 'api:education-detail' '00000000-0000-0000-0000-000000000000' %}";
 const EDUCATION_STAR_ENDPOINT = "{% url 'api:education-star' '00000000-0000-0000-0000-000000000000' %}";
 const IS_SUPERUSER = "{{ user.is_superuser|yesno:'true,false' }}" === "true";
+const CAN_EDIT = IS_SUPERUSER || "{{ is_editor|yesno:'true,false' }}" === "true";
 const IS_AUTHENTICATED = "{{ user.is_authenticated|yesno:'true,false' }}" === "true";
 
 const loadingState = document.getElementById('loading');
@@ -114,9 +115,11 @@ function buildEducationCardElement(education) {
     const yearGrad = escapeHtml(education.year_grad) || 'Present';
     const editUrl = "{% url 'main:edit_education' '00000000-0000-0000-0000-000000000000' %}"
         .replace('00000000-0000-0000-0000-000000000000', education.id);
-    const adminActions = IS_SUPERUSER
-        ? `<a href="${editUrl}" class="button button-secondary">Edit</a>
-           <button type="button" class="button button-danger"
+    const editAction = CAN_EDIT
+        ? `<a href="${editUrl}" class="button button-secondary">Edit</a>`
+        : '';
+    const deleteAction = IS_SUPERUSER
+        ? `<button type="button" class="button button-danger"
                    data-action="delete" data-id="${escapeHtml(education.id)}">
                Hapus
            </button>`
@@ -148,7 +151,8 @@ function buildEducationCardElement(education) {
         </div>
         <div class="edu-actions">
             ${starAction}
-            ${adminActions}
+            ${editAction}
+            ${deleteAction}
         </div>
     `;
     return article;
