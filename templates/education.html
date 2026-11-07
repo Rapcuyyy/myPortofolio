@@ -114,7 +114,7 @@ function buildEducationCardElement(education) {
     const yearStart = escapeHtml(education.year_start);
     const yearGrad = escapeHtml(education.year_grad) || 'Present';
     const editUrl = "{% url 'main:edit_education' '00000000-0000-0000-0000-000000000000' %}"
-        .replace('00000000-0000-0000-0000-000000000000', education.id);
+        .replace('00000000-0000-0000-0000-000000000000', escapeHtml(education.id));
     const editAction = CAN_EDIT
         ? `<a href="${editUrl}" class="button button-secondary">Edit</a>`
         : '';
