@@ -288,6 +288,21 @@ class EducationAPITest(APITestCase):
             self.assertEqual(self.education.category, "other")
         self.assertEqual(Education.objects.count(), 1)
 
+    def test_session_patch_without_csrf_token_is_rejected(self):
+        client = APIClient(enforce_csrf_checks=True)
+        self.assertTrue(client.login(
+            username="education-owner", password="test-password",
+        ))
+
+        response = client.patch(
+            self.detail_url, {"major": "Changed"}, format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.education.refresh_from_db()
+        self.assertEqual(self.education.major, "Computer Science")
+        self.assertEqual(Education.objects.count(), 1)
+
     def test_star_requires_login_and_toggles(self):
         response = self.client.post(self.star_url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
