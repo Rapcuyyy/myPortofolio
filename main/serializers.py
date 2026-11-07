@@ -55,6 +55,20 @@ class EducationSerializer(serializers.ModelSerializer):
             "star_count", "is_starred",
         ]
 
+    def validate_place(self, value):
+        value = strip_tags(value).strip()
+        if not value:
+            raise serializers.ValidationError(
+                "Tempat pendidikan tidak boleh hanya berisi tag HTML."
+            )
+        return value
+
+    def validate_major(self, value):
+        return strip_tags(value).strip()
+
+    def validate_description(self, value):
+        return strip_tags(value).strip()
+
     def get_star_count(self, obj):
         return obj.starred_by.count()
 
