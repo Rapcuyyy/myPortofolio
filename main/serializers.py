@@ -44,9 +44,22 @@ class ExperienceSerializer(serializers.ModelSerializer):
 
 
 class EducationSerializer(serializers.ModelSerializer):
+    star_count = serializers.SerializerMethodField()
+    is_starred = serializers.SerializerMethodField()
+
     class Meta:
         model = Education
         fields = [
             "id", "place", "major", "category", "year_start",
             "year_grad", "description", "logo", "thumbnail",
+            "star_count", "is_starred",
         ]
+
+    def get_star_count(self, obj):
+        return obj.starred_by.count()
+
+    def get_is_starred(self, obj):
+        request = self.context.get("request")
+        if request is None or not request.user.is_authenticated:
+            return False
+        return obj.starred_by.filter(pk=request.user.pk).exists()
