@@ -206,20 +206,24 @@ class EducationAPITest(APITestCase):
                 ).status_code,
                 status.HTTP_403_FORBIDDEN,
             )
+            self.assertEqual(Education.objects.count(), 1)
+            self.assertFalse(
+                Education.objects.filter(place="New University").exists(),
+            )
             self.assertEqual(
                 self.client.patch(
                     self.detail_url, {"major": "Changed"}, format="json",
                 ).status_code,
                 status.HTTP_403_FORBIDDEN,
             )
+            self.education.refresh_from_db()
+            self.assertEqual(self.education.major, "Computer Science")
             self.assertEqual(
                 self.client.delete(self.detail_url).status_code,
                 status.HTTP_403_FORBIDDEN,
             )
-
-        self.assertEqual(Education.objects.count(), 1)
-        self.education.refresh_from_db()
-        self.assertEqual(self.education.major, "Computer Science")
+            self.assertTrue(Education.objects.filter(pk=self.education.pk).exists())
+            self.assertEqual(Education.objects.count(), 1)
 
     def test_editor_can_patch_but_cannot_create_or_delete_education(self):
         self.client.force_authenticate(user=self.editor)
@@ -234,11 +238,18 @@ class EducationAPITest(APITestCase):
             self.list_url, self.create_payload(), format="multipart",
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Education.objects.count(), 1)
+        self.assertFalse(
+            Education.objects.filter(place="New University").exists(),
+        )
         self.assertEqual(
             self.client.delete(self.detail_url).status_code,
             status.HTTP_403_FORBIDDEN,
         )
+        self.assertTrue(Education.objects.filter(pk=self.education.pk).exists())
         self.assertEqual(Education.objects.count(), 1)
+        self.education.refresh_from_db()
+        self.assertEqual(self.education.major, "Data Science")
 
     def test_owner_can_create_and_delete_education(self):
         self.client.force_authenticate(user=self.owner)
