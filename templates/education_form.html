@@ -56,10 +56,25 @@
                 : csrfInput?.value;
         }
 
+        function collectApiMessages(value, field = '') {
+            if (typeof value === 'string') {
+                return [field ? `${field}: ${value}` : value];
+            }
+            if (Array.isArray(value)) {
+                return value.flatMap(item => collectApiMessages(item, field));
+            }
+            if (value && typeof value === 'object') {
+                return Object.entries(value).flatMap(([key, item]) =>
+                    collectApiMessages(item, key === 'detail' || key === 'non_field_errors'
+                        ? field
+                        : key.replaceAll('_', ' '))
+                );
+            }
+            return [];
+        }
+
         function updateErrorMessage(data, status) {
-            const messages = Object.values(data || {}).flatMap(value =>
-                Array.isArray(value) ? value : [value]
-            ).filter(value => typeof value === 'string');
+            const messages = collectApiMessages(data);
             return messages.join(' ') || `Request failed (HTTP ${status}).`;
         }
 
