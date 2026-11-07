@@ -1,11 +1,15 @@
 import uuid
+from io import BytesIO
 
 from django.contrib.auth.models import Group, User
+from django.core.files.storage import default_storage
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from PIL import Image
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from main.models import Experience
+from main.models import Education, Experience
 
 
 class ExperienceAPITest(APITestCase):
@@ -106,13 +110,34 @@ class ExperienceAPITest(APITestCase):
         self.assertEqual(response.data["star_count"], 0)
         self.assertFalse(response.data["is_starred"])
 
-    def test_staff_and_editor_cannot_manage_experiences(self):
+    def test_staff_without_editor_group_cannot_manage_experiences(self):
         self.visitor.is_staff = True
         self.visitor.save()
-        self.visitor.groups.add(Group.objects.create(name="Editor"))
         self.client.force_authenticate(user=self.visitor)
         response = self.client.patch(self.detail_url, {"title": "Changed"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_editor_can_patch_but_cannot_create_or_delete_experiences(self):
+        self.visitor.groups.add(Group.objects.create(name="Editor"))
+        self.client.force_authenticate(user=self.visitor)
+
+        response = self.client.patch(
+            self.detail_url, {"title": "Changed"}, format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.experience.refresh_from_db()
+        self.assertEqual(self.experience.title, "Changed")
+
+        self.assertEqual(
+            self.client.post(
+                self.list_url, self.payload, format="json",
+            ).status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
+        self.assertEqual(
+            self.client.delete(self.detail_url).status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
 
     def test_wrong_method(self):
         self.client.force_authenticate(user=self.owner)
@@ -136,3 +161,183 @@ class ExperienceAPITest(APITestCase):
             self.list_url, self.payload, format="json", HTTP_X_CSRFTOKEN=token,
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+class EducationAPITest(APITestCase):
+    def setUp(self):
+        self.owner = User.objects.create_superuser(
+            username="education-owner", password="test-password",
+            email="education-owner@example.com",
+        )
+        self.user = User.objects.create_user(
+            username="education-user", password="test-password",
+        )
+        self.editor = User.objects.create_user(
+            username="education-editor", password="test-password",
+        )
+        self.editor.groups.add(Group.objects.create(name="Editor"))
+        self.education = Education.objects.create(
+            place="Example University", major="Computer Science",
+            description="Undergraduate studies", logo="",
+        )
+        self.list_url = reverse("api:education-list")
+        self.detail_url = reverse(
+            "api:education-detail", args=[self.education.id],
+        )
+        self.star_url = reverse("api:education-star", args=[self.education.id])
+        self.uploaded_logo_name = None
+
+    def tearDown(self):
+        if self.uploaded_logo_name:
+            default_storage.delete(self.uploaded_logo_name)
+        super().tearDown()
+
+    def create_payload(self):
+        filename = f"{uuid.uuid4()}.png"
+        self.uploaded_logo_name = f"static/img/{filename}"
+        image = BytesIO()
+        Image.new("RGB", (1, 1)).save(image, format="PNG")
+        return {
+            "place": "New University",
+            "major": "Software Engineering",
+            "description": "Graduate studies",
+            "logo": SimpleUploadedFile(
+                filename,
+                image.getvalue(),
+                content_type="image/png",
+            ),
+        }
+
+    def test_public_list_searches_by_place_query_parameter(self):
+        response = self.client.get(self.list_url, {"place": "EXAMPLE"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], str(self.education.id))
+        self.assertEqual(response.data[0]["place"], "Example University")
+        self.assertNotIn("fields", response.data[0])
+
+        response = self.client.get(self.list_url, {"place": "not-found"})
+        self.assertEqual(response.data, [])
+
+    def test_visitors_and_regular_users_cannot_write_education(self):
+        for user in (None, self.user):
+            self.client.force_authenticate(user=user)
+            self.assertEqual(
+                self.client.post(
+                    self.list_url, self.create_payload(), format="multipart",
+                ).status_code,
+                status.HTTP_403_FORBIDDEN,
+            )
+            self.assertEqual(Education.objects.count(), 1)
+            self.assertFalse(
+                Education.objects.filter(place="New University").exists(),
+            )
+            self.assertEqual(
+                self.client.patch(
+                    self.detail_url, {"major": "Changed"}, format="json",
+                ).status_code,
+                status.HTTP_403_FORBIDDEN,
+            )
+            self.education.refresh_from_db()
+            self.assertEqual(self.education.major, "Computer Science")
+            self.assertEqual(
+                self.client.delete(self.detail_url).status_code,
+                status.HTTP_403_FORBIDDEN,
+            )
+            self.assertTrue(Education.objects.filter(pk=self.education.pk).exists())
+            self.assertEqual(Education.objects.count(), 1)
+
+    def test_editor_can_patch_but_cannot_create_or_delete_education(self):
+        self.client.force_authenticate(user=self.editor)
+        response = self.client.patch(
+            self.detail_url, {"major": "Data Science"}, format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.education.refresh_from_db()
+        self.assertEqual(self.education.major, "Data Science")
+
+        response = self.client.post(
+            self.list_url, self.create_payload(), format="multipart",
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Education.objects.count(), 1)
+        self.assertFalse(
+            Education.objects.filter(place="New University").exists(),
+        )
+        self.assertEqual(
+            self.client.delete(self.detail_url).status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
+        self.assertTrue(Education.objects.filter(pk=self.education.pk).exists())
+        self.assertEqual(Education.objects.count(), 1)
+        self.education.refresh_from_db()
+        self.assertEqual(self.education.major, "Data Science")
+
+    def test_owner_can_create_and_delete_education(self):
+        self.client.force_authenticate(user=self.owner)
+        response = self.client.post(
+            self.list_url, self.create_payload(), format="multipart",
+        )
+        self.assertEqual(
+            response.status_code, status.HTTP_201_CREATED, response.data,
+        )
+        created_id = response.data["id"]
+        self.assertTrue(Education.objects.filter(pk=created_id).exists())
+
+        response = self.client.delete(
+            reverse("api:education-detail", args=[created_id]),
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Education.objects.filter(pk=created_id).exists())
+
+    def test_input_validation_rejects_invalid_education_data(self):
+        self.client.force_authenticate(user=self.owner)
+        for changes, field in [
+            ({"place": "<b></b>"}, "place"),
+            ({"category": "not-a-category"}, "category"),
+        ]:
+            response = self.client.patch(
+                self.detail_url, changes, format="json",
+            )
+            self.assertEqual(
+                response.status_code, status.HTTP_400_BAD_REQUEST,
+            )
+            self.assertIn(field, response.data)
+
+            self.education.refresh_from_db()
+            self.assertEqual(self.education.place, "Example University")
+            self.assertEqual(self.education.category, "other")
+        self.assertEqual(Education.objects.count(), 1)
+
+    def test_session_patch_without_csrf_token_is_rejected(self):
+        client = APIClient(enforce_csrf_checks=True)
+        self.assertTrue(client.login(
+            username="education-owner", password="test-password",
+        ))
+
+        response = client.patch(
+            self.detail_url, {"major": "Changed"}, format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.education.refresh_from_db()
+        self.assertEqual(self.education.major, "Computer Science")
+        self.assertEqual(Education.objects.count(), 1)
+
+    def test_star_requires_login_and_toggles(self):
+        response = self.client.post(self.star_url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertFalse(self.education.starred_by.exists())
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.star_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["is_starred"])
+        self.assertEqual(response.data["star_count"], 1)
+        self.assertTrue(self.education.starred_by.filter(pk=self.user.pk).exists())
+
+        response = self.client.post(self.star_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["is_starred"])
+        self.assertEqual(response.data["star_count"], 0)
+        self.assertFalse(self.education.starred_by.exists())

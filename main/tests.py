@@ -36,26 +36,28 @@ class MainTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "experience.html")
-        self.assertContains(response, self.experience.title)
-        self.assertContains(response, self.experience.description)
-        self.assertContains(response, "Part-Time")
-        self.assertContains(response, "Sedang berlangsung")
+        self.assertContains(response, "My journey so far")
+        self.assertContains(
+            response,
+            f'const EXPERIENCES_ENDPOINT = "{reverse("api:experience-list")}";',
+        )
         self.assertContains(response, f'href="{reverse("main:show_main")}"')
 
     def test_empty_experience_page(self):
         Experience.objects.all().delete()
         response = self.client.get(reverse("main:show_experience"))
 
-        self.assertContains(response, "Belum ada pengalaman yang ditambahkan.")
+        self.assertContains(
+            response,
+            "Belum ada pengalaman yang ditambahkan atau ditemukan.",
+        )
 
-    def test_completed_experience(self):
+    def test_completed_experience_is_not_ongoing(self):
         self.experience.ended_at = timezone.now()
         self.experience.save()
-        response = self.client.get(reverse("main:show_experience"))
 
         self.assertFalse(self.experience.is_ongoing)
-        self.assertContains(response, "Selesai")
-        self.assertNotContains(response, "Sedang berlangsung")
+
 
 class EducationTest(TestCase):
     def setUp(self):
@@ -77,14 +79,18 @@ class EducationTest(TestCase):
         response = self.client.get(reverse("main:show_education"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, self.education.place)
-        self.assertContains(response, self.education.major)
-        self.assertContains(response, self.education.year_start)
-        self.assertContains(response, self.education.description)
+        self.assertContains(response, "My educational background")
+        self.assertContains(
+            response,
+            f'const BASE_EDUCATION_ENDPOINT = "{reverse("api:education-list")}";',
+        )
         self.assertContains(response, f'href="{reverse("main:show_main")}"')
 
-    def test_empty_experience_page(self):
+    def test_empty_education_page(self):
         Education.objects.all().delete()
         response = self.client.get(reverse("main:show_education"))
 
-        self.assertContains(response, "Not added yet.")
+        self.assertContains(
+            response,
+            "Belum ada pendidikan yang ditambahkan atau ditemukan.",
+        )
