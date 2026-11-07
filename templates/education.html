@@ -22,11 +22,11 @@
                 <form id="project-search-form" class="project-search">
                     <input type="search"
                            id="search-input"
-                           name="title"
-                           value="{{ title_query }}"
-                           placeholder="Cari berdasarkan nama proyek"
+                           name="place"
+                           value="{{ place_query }}"
+                           placeholder="Cari berdasarkan nama institusi"
                            class="project-search__input"
-                           aria-label="Cari berdasarkan nama proyek">
+                           aria-label="Cari berdasarkan nama institusi">
                     <button type="submit" class="button">Cari</button>
                 </form>
 
@@ -58,7 +58,7 @@
 
 <script>
 // Konfigurasi API
-const BASE_EDUCATION_ENDPOINT = "{% url 'main:get_education_json' %}";
+const BASE_EDUCATION_ENDPOINT = "{% url 'api:education-list' %}";
 const IS_SUPERUSER = "{{ user.is_superuser|yesno:'true,false' }}" === "true";
 let educationAbortController;
 
@@ -92,8 +92,8 @@ function escapeHtml(value) {
 
 // Membuat elemen card education (Dikembalikan ke struktur class awal)
 function buildEducationCardElement(item) {
-    const education = item.fields;
-    const educationId = item.pk;
+    const education = item;
+    const educationId = education.id;
 
     const articleElement = document.createElement('article');
     articleElement.className = 'edu-card';
@@ -179,7 +179,8 @@ async function fetchEducations(searchQuery = "") {
     try {
         displayPageSection({ showLoading: true });
         
-        const url = searchQuery ? `${BASE_EDUCATION_ENDPOINT}?place=${encodeURIComponent(searchQuery)}` : BASE_EDUCATION_ENDPOINT;
+        const url = new URL(BASE_EDUCATION_ENDPOINT, window.location.origin);
+        if (searchQuery) url.searchParams.set('place', searchQuery);
         
         const response = await fetch(url, {
             headers: { 'Accept': 'application/json' },

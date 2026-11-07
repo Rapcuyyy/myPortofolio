@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from main.models import Experience
+from main.models import Education, Experience
 
 
 class ExperienceAPITest(APITestCase):
@@ -136,3 +136,23 @@ class ExperienceAPITest(APITestCase):
             self.list_url, self.payload, format="json", HTTP_X_CSRFTOKEN=token,
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+class EducationAPITest(APITestCase):
+    def setUp(self):
+        self.education = Education.objects.create(
+            place="Example University", major="Computer Science",
+            description="Undergraduate studies", logo="",
+        )
+        self.list_url = reverse("api:education-list")
+
+    def test_public_list_searches_by_place_query_parameter(self):
+        response = self.client.get(self.list_url, {"place": "EXAMPLE"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], str(self.education.id))
+        self.assertEqual(response.data[0]["place"], "Example University")
+        self.assertNotIn("fields", response.data[0])
+
+        response = self.client.get(self.list_url, {"place": "not-found"})
+        self.assertEqual(response.data, [])

@@ -46,13 +46,14 @@ class ExperienceSerializer(serializers.ModelSerializer):
 class EducationSerializer(serializers.ModelSerializer):
     star_count = serializers.SerializerMethodField()
     is_starred = serializers.SerializerMethodField()
+    starred_by_names = serializers.SerializerMethodField()
 
     class Meta:
         model = Education
         fields = [
             "id", "place", "major", "category", "year_start",
             "year_grad", "description", "logo", "thumbnail",
-            "star_count", "is_starred",
+            "star_count", "is_starred", "starred_by_names",
         ]
 
     def validate_place(self, value):
@@ -77,3 +78,6 @@ class EducationSerializer(serializers.ModelSerializer):
         if request is None or not request.user.is_authenticated:
             return False
         return obj.starred_by.filter(pk=request.user.pk).exists()
+
+    def get_starred_by_names(self, obj):
+        return ", ".join(user.username for user in obj.starred_by.all())
