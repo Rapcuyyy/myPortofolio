@@ -1,7 +1,7 @@
 from django.utils.html import strip_tags
 from rest_framework import serializers
 
-from main.models import Experience
+from main.models import Education, Experience
 
 
 class ExperienceSerializer(serializers.ModelSerializer):
@@ -41,3 +41,12 @@ class ExperienceSerializer(serializers.ModelSerializer):
 
     def get_starred_by_names(self, obj):
         return ", ".join(user.username for user in obj.starred_by.all())
+
+
+class EducationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Education
+        fields = [
+            "id", "place", "major", "category", "year_start",
+            "year_grad", "description", "logo", "thumbnail",
+        ]
