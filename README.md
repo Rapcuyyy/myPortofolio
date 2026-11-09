@@ -61,17 +61,35 @@ Pada tugas ini, AI digunakan untuk membantu saya lebih memahami tentang pengguna
 
 2. `await` adalah *keyword* yang hanya bisa digunakan di dalam *async function* dan berfungsi untuk “menunggu” `Promise` selesai diproses sebelum melanjutkan ke baris kode berikutnya. Tanpa `await`, sebuah `Promise` akan tetap berjalan di belakang layar dan kode berikutnya akan langsung dieksekusi tanpa menunggu hasilnya.
 
-Sebagai contoh, perhatikan potongan kode berikut:
+    Sebagai contoh, perhatikan potongan kode berikut:
 
-```javascript
-async function ambilData() {
-  const hasil = await fetch('https://contoh-api.com/data');
-  console.log(hasil);
-}
-```
+    ```javascript
+    async function ambilData() {
+      const hasil = await fetch('https://contoh-api.com/data');
+      console.log(hasil);
+    }
+    ```
 
-Pada kode di atas, keyword `async` yang diletakkan sebelum `function` menandai bahwa `ambilData` adalah *async function*. Selanjutnya, keyword `await` yang diletakkan sebelum `fetch()` membuat eksekusi kode menunggu hingga proses `fetch()` selesai sebelum baris `console.log(hasil)` dijalankan.
+    Pada kode di atas, keyword `async` yang diletakkan sebelum `function` menandai bahwa `ambilData` adalah *async function*. Selanjutnya, keyword `await` yang diletakkan sebelum `fetch()` membuat eksekusi kode menunggu hingga proses `fetch()` selesai sebelum baris `console.log(hasil)` dijalankan.
 
 3. *Cross-Site Scripting* (XSS) adalah serangan ketika penyerang berhasil menyisipkan kode JavaScript miliknya ke dalam halaman web yang kemudian dijalankan di browser pengguna lain. *Template* Django melakukan auto-escaping pada setiap `{ variabel }`. Karakter seperti `<` dan `>` diubah menjadi `&lt;` dan `&gt;` sehingga browser menampilkannya sebagai teks biasa, bukan sebagai tag HTML.
 
-Perlindungan itu hilang ketika kita pindah ke AJAX. Pada `buildProjectCardElement`, data dari JSON disisipkan ke dalam *template literal* lalu dipasang lewat `innerHTML`. Tidak ada lagi Django yang melakukan *escaping* sehingga browser akan memperlakukan setiap tag HTML di dalam data sebagai kode sungguhan.
+    Perlindungan itu hilang ketika kita pindah ke AJAX. Pada `buildProjectCardElement`, data dari JSON disisipkan ke dalam *template literal* lalu dipasang lewat `innerHTML`. Tidak ada lagi Django yang melakukan *escaping* sehingga browser akan memperlakukan setiap tag HTML di dalam data sebagai kode sungguhan.
+
+### Tugas 6
+
+Pada tugas ini, saya menggunakan AI untuk lebih memahami konsep REST, penggunaan *serializer* pada Django REST Framework, serta cara kerja autentikasi, otorisasi, dan perlindungan CSRF pada API.
+
+1. REST (*Representational State Transfer*) adalah gaya arsitektur untuk merancang komunikasi antara *client* dan *server* melalui sumber daya (*resource*). REST menggunakan prinsip seperti pemisahan *client* dan *server*, komunikasi yang *stateless*, serta antarmuka yang konsisten, misalnya dengan menggunakan metode HTTP sesuai fungsinya. Mengembalikan JSON saja belum cukup untuk menyebut sebuah API sebagai RESTful, karena JSON hanyalah format representasi data. API juga perlu mengikuti prinsip REST dalam cara mengelola sumber daya dan menangani request.
+
+   `PUT` dan `PATCH` sama-sama digunakan untuk memperbarui sumber daya, tetapi cakupannya berbeda. `PUT` biasanya mengganti seluruh data sumber daya, sehingga cocok digunakan ketika *client* mengirimkan representasi lengkap yang baru. Contohnya, mengubah semua field profil pengguna sekaligus. Sementara itu, `PATCH` hanya mengubah sebagian field, sehingga lebih sesuai ketika pengguna hanya mengganti alamat email tanpa mengirim ulang nama dan data profil lainnya.
+
+2. *Serializer* pada Django REST Framework berperan mengubah objek atau *queryset* Django menjadi data yang dapat dikirim melalui API, seperti JSON. *Serializer* juga dapat memvalidasi data yang diterima sebelum data tersebut disimpan ke *database*. Dibandingkan merakit *dictionary* secara manual lalu mengembalikannya dengan `JsonResponse` seperti pada Tutorial 05, *serializer* membuat proses konversi dan validasi lebih terstruktur, dapat digunakan kembali, dan lebih mudah dikembangkan saat field atau aturan validasi bertambah.
+
+3. Autentikasi adalah proses untuk memastikan identitas pengguna, misalnya melalui *session* atau *token*. Otorisasi adalah proses menentukan tindakan apa yang boleh dilakukan oleh pengguna yang sudah dikenali tersebut. Di Django REST Framework, autentikasi mengenali pengguna, sedangkan *permission class* memeriksa apakah pengguna itu berhak mengakses suatu endpoint atau melakukan tindakan tertentu.
+
+   Hak akses harus diperiksa di *server* menggunakan *permission class*, bukan hanya dengan menyembunyikan tombol di *template*. Tampilan halaman hanya mengatur apa yang terlihat di *browser*; pengguna tetap dapat mengirim request langsung ke endpoint API. Pemeriksaan di *server* memastikan setiap request yang masuk tetap diperiksa, termasuk request yang tidak berasal dari antarmuka situs.
+
+4. Ketika API memakai `SessionAuthentication`, *browser* mengirimkan *session cookie* secara otomatis bersama request. Karena itu, situs lain dapat mencoba memanfaatkan sesi pengguna yang sedang aktif untuk mengirim request yang mengubah data. Token CSRF membantu memastikan bahwa request tersebut memang berasal dari aplikasi kita. Untuk operasi yang mengubah data, seperti `POST`, `PUT`, `PATCH`, atau `DELETE`, token ini tetap perlu diperiksa.
+
+   *Test* yang memakai `force_authenticate` tidak cukup untuk membuktikan perlindungan CSRF berjalan karena metode tersebut mengatur pengguna yang sudah terautentikasi secara langsung dan melewati alur autentikasi normal. Akibatnya, test itu tidak membuktikan bahwa `SessionAuthentication` menolak request tanpa token CSRF. Pengujian CSRF perlu memakai autentikasi *session* yang sebenarnya dan mengaktifkan pemeriksaan CSRF pada *test client*.
