@@ -8,8 +8,32 @@ from django.urls import reverse
 from PIL import Image
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
+from rest_framework.authtoken.models import Token
 
 from main.models import Education, Experience
+
+
+class AuthenticationAPITest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="api-user", password="test-password",
+        )
+
+    def test_token_login_and_logout(self):
+        response = self.client.post(
+            reverse("api:api_token_auth"),
+            {"username": "api-user", "password": "test-password"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        token = Token.objects.get(key=response.data["token"])
+
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+        logout_response = client.post(reverse("api:api_logout"))
+
+        self.assertEqual(logout_response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Token.objects.filter(key=token.key).exists())
 
 
 class ExperienceAPITest(APITestCase):
